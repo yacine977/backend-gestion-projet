@@ -4,7 +4,7 @@ var router = express.Router();
 
 //get all users
 router.get("/", async function (req, res, next) {
-  const [rows] = await pool.query("select * from utilisateurs");
+  const [rows] = await pool.query("select * from utilisateur");
   res.json(rows);
 });
 
