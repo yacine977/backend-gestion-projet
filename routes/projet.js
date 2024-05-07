@@ -66,4 +66,22 @@ router.delete("/:id", async function (req, res, next) {
   res.json(rows);
 });
 
+// route pour valider un projet
+router.put("/:id/valider", async function (req, res, next) {
+  const id = req.params.id;
+  try {
+    const [results] = await pool.query(
+      "UPDATE projet SET est_valide = TRUE WHERE id = ?",
+      [id]
+    );
+    if (results.affectedRows === 0) {
+      res.status(404).json({ message: "Projet non trouvé" });
+    } else {
+      res.json({ message: "Projet validé" });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
