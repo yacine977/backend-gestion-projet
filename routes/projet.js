@@ -84,4 +84,22 @@ router.put("/:id/valider", async function (req, res, next) {
   }
 });
 
+// route pour modifier le chef de projet d'un projet
+router.put("/:id/chef", async function (req, res, next) {
+  const id = req.params.id;
+  const chefDeProjetId = req.body.chefDeProjetId;
+  try {
+    const [results] = await pool.query(
+      "UPDATE projet SET chefDeProjetId = ? WHERE id = ?",
+      [chefDeProjetId, id]
+    );
+    if (results.affectedRows === 0) {
+      res.status(404).json({ message: "Projet non trouvé" });
+    } else {
+      res.json({ message: "Chef de projet modifié" });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
 module.exports = router;
