@@ -102,4 +102,32 @@ router.put("/:id/chef", async function (req, res, next) {
     next(err);
   }
 });
+
+// route pour assigner des utilisateurs à un projet
+router.post("/:id/assigner", async function (req, res, next) {
+  const idProjet = req.params.id;
+  const utilisateurs = req.body.utilisateurs; // un tableau d'id d'utilisateurs
+
+  try {
+    // commence une transaction
+    await pool.query("START TRANSACTION");
+
+    for (let idUtilisateur of utilisateurs) {
+      await pool.query(
+        "INSERT INTO projet_utilisateur (projetId, utilisateurId) VALUES (?, ?)",
+        [idProjet, idUtilisateur]
+      );
+    }
+
+    // termine la transaction
+    await pool.query("COMMIT");
+
+    res.json({ message: "Utilisateurs assignés au projet" });
+  } catch (err) {
+    // en cas d'erreur, annule la transaction
+    await pool.query("ROLLBACK");
+    next(err);
+  }
+});
+
 module.exports = router;
