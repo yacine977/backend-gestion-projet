@@ -8,4 +8,32 @@ router.get("/", async function (req, res, next) {
   res.json(rows);
 });
 
+// route pour cree une tache
+router.post("/", async function (req, res, next) {
+  const {
+    id,
+    description,
+    priorite,
+    statut,
+    dateDebut,
+    dateFinPrevu,
+    dateFinReel,
+    projetId,
+  } = req.body;
+  const [rows] = await pool.query(
+    "INSERT INTO Tache (id, description, priorite, statut, dateDebut, dateFinPrevu, dateFinReel, projetId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    [
+      id,
+      description,
+      priorite,
+      statut,
+      dateDebut,
+      dateFinPrevu,
+      dateFinReel,
+      projetId,
+    ]
+  );
+  res.json(rows);
+});
+
 module.exports = router;
