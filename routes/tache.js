@@ -34,4 +34,39 @@ router.post("/", async function (req, res, next) {
   res.json(rows);
 });
 
+//route pour modifier une tache
+router.put("/:id", async function (req, res, next) {
+  const {
+    description,
+    priorite,
+    statut,
+    dateDebut,
+    dateFinPrevu,
+    dateFinReel,
+    projetId,
+  } = req.body;
+  const [rows] = await pool.query(
+    "UPDATE Tache SET description = ?, priorite = ?, statut = ?, dateDebut = ?, dateFinPrevu = ?, dateFinReel = ?, projetId = ? WHERE id = ?",
+    [
+      description,
+      priorite,
+      statut,
+      dateDebut,
+      dateFinPrevu,
+      dateFinReel,
+      projetId,
+      req.params.id,
+    ]
+  );
+  res.json(rows);
+});
+
+//route pour supprimer une tache
+router.delete("/:id", async function (req, res, next) {
+  const [rows] = await pool.query("DELETE FROM Tache WHERE id = ?", [
+    req.params.id,
+  ]);
+  res.json(rows);
+});
+
 module.exports = router;
