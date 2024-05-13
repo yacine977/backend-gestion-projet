@@ -33,29 +33,38 @@ router.get("/:id", async function (req, res, next) {
   res.json(rows);
 });
 
-//route pour update projet
+//route update projet
 router.put("/:id", async function (req, res, next) {
-  const {
-    nom,
-    description,
-    dateDebut,
-    dateFinPrevu,
-    dateFinReel,
-    chefDeProjetId,
-  } = req.body;
-  const [rows] = await pool.query(
-    "UPDATE Projet SET nom = ?, description = ?, dateDebut = ?, dateFinPrevu = ?, dateFinReel = ?, chefDeProjetId = ? WHERE id = ?",
-    [
-      nom,
-      description,
-      dateDebut,
-      dateFinPrevu,
-      dateFinReel,
-      chefDeProjetId,
+  try {
+    // Récupérer l'objet existant
+    const [rows] = await pool.query("SELECT * FROM Projet WHERE id = ?", [
       req.params.id,
-    ]
-  );
-  res.json(rows);
+    ]);
+    const oldData = rows[0];
+
+    // Fusionner les anciennes et les nouvelles valeurs
+    const newData = {
+      ...oldData,
+      ...req.body,
+    };
+
+    // Effectuer la mise à jour
+    const [updateRows] = await pool.query(
+      "UPDATE Projet SET nom = ?, description = ?, dateDebut = ?, dateFinPrevu = ?, dateFinReel = ?, chefDeProjetId = ? WHERE id = ?",
+      [
+        newData.nom,
+        newData.description,
+        newData.dateDebut,
+        newData.dateFinPrevu,
+        newData.dateFinReel,
+        newData.chefDeProjetId,
+        req.params.id,
+      ]
+    );
+    res.json(updateRows);
+  } catch (err) {
+    next(err);
+  }
 });
 
 //route pour delete projet
