@@ -36,29 +36,37 @@ router.post("/", async function (req, res, next) {
 
 //route pour modifier une tache
 router.put("/:id", async function (req, res, next) {
-  const {
-    description,
-    priorite,
-    statut,
-    dateDebut,
-    dateFinPrevu,
-    dateFinReel,
-    projetId,
-  } = req.body;
-  const [rows] = await pool.query(
-    "UPDATE Tache SET description = ?, priorite = ?, statut = ?, dateDebut = ?, dateFinPrevu = ?, dateFinReel = ?, projetId = ? WHERE id = ?",
-    [
-      description,
-      priorite,
-      statut,
-      dateDebut,
-      dateFinPrevu,
-      dateFinReel,
-      projetId,
+  try {
+    // Récupérer l'objet existant
+    const [rows] = await pool.query("SELECT * FROM Tache WHERE id = ?", [
       req.params.id,
-    ]
-  );
-  res.json(rows);
+    ]);
+    const oldData = rows[0];
+
+    // Fusionner les anciennes et les nouvelles valeurs
+    const newData = {
+      ...oldData,
+      ...req.body,
+    };
+
+    // Effectuer la mise à jour
+    const [updateRows] = await pool.query(
+      "UPDATE Tache SET description = ?, priorite = ?, statut = ?, dateDebut = ?, dateFinPrevu = ?, dateFinReel = ?, projetId = ? WHERE id = ?",
+      [
+        newData.description,
+        newData.priorite,
+        newData.statut,
+        newData.dateDebut,
+        newData.dateFinPrevu,
+        newData.dateFinReel,
+        newData.projetId,
+        req.params.id,
+      ]
+    );
+    res.json(updateRows);
+  } catch (err) {
+    next(err);
+  }
 });
 
 //route pour supprimer une tache
