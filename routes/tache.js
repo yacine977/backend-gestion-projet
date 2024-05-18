@@ -16,17 +16,17 @@ router.get("/:id", async function (req, res, next) {
   res.json(rows[0]);
 });
 
-// route pour cree une tache
+// route pour créer une tâche
 router.post("/", async function (req, res, next) {
-  const {
-    description,
-    priorite,
-    statut,
-    dateDebut,
-    dateFinPrevu,
-    dateFinReel,
-    projetId,
-  } = req.body;
+  const { description, priorite, statut, dateDebut, dateFinPrevu, projetId } =
+    req.body;
+
+  let { dateFinReel } = req.body;
+
+  if (!dateFinReel) {
+    dateFinReel = null;
+  }
+
   const [rows] = await pool.query(
     "INSERT INTO Tache (description, priorite, statut, dateDebut, dateFinPrevu, dateFinReel, projetId) VALUES (?, ?, ?, ?, ?, ?, ?)",
     [
@@ -84,5 +84,7 @@ router.delete("/:id", async function (req, res, next) {
   ]);
   res.json(rows);
 });
+
+//
 
 module.exports = router;
