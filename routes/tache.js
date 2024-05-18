@@ -57,6 +57,11 @@ router.put("/:id", async function (req, res, next) {
       ...req.body,
     };
 
+    // Si dateFinReel n'est pas fournie, la définir sur null
+    if (!newData.dateFinReel) {
+      newData.dateFinReel = null;
+    }
+
     // Effectuer la mise à jour
     const [updateRows] = await pool.query(
       "UPDATE Tache SET description = ?, priorite = ?, statut = ?, dateDebut = ?, dateFinPrevu = ?, dateFinReel = ?, projetId = ? WHERE id = ?",
