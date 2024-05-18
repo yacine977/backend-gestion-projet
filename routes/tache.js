@@ -8,6 +8,14 @@ router.get("/", async function (req, res, next) {
   res.json(rows);
 });
 
+//route get tache by id
+router.get("/:id", async function (req, res, next) {
+  const [rows] = await pool.query("select * from tache where id = ?", [
+    req.params.id,
+  ]);
+  res.json(rows[0]);
+});
+
 // route pour cree une tache
 router.post("/", async function (req, res, next) {
   const {
