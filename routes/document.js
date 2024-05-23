@@ -88,4 +88,16 @@ router.put("/:id", async function (req, res, next) {
   res.status(200).json({ message: "Document updated successfully" });
 });
 
+//route delete document by id
+router.delete("/:id", async function (req, res, next) {
+  const [rows] = await pool.query("DELETE FROM document WHERE id = ?", [
+    req.params.id,
+  ]);
+  if (rows.affectedRows === 0) {
+    res.status(404).json({ message: "Document not found" });
+  } else {
+    res.status(200).json({ message: "Document deleted successfully" });
+  }
+});
+
 module.exports = router;
