@@ -20,4 +20,12 @@ router.get("/", async function (req, res, next) {
   res.json(rows);
 });
 
+//route get document by id
+router.get("/:id", async function (req, res, next) {
+  const [rows] = await pool.query("select * from document where id = ?", [
+    req.params.id,
+  ]);
+  res.json(rows[0]);
+});
+
 module.exports = router;
