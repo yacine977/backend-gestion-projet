@@ -34,4 +34,41 @@ router.delete("/:id", async function (req, res, next) {
   res.status(204).end();
 });
 
+//route update document by id
+router.put("/:id", async function (req, res, next) {
+  const { nom, type, cheminAcces, utilisateurId } = req.body;
+
+  let updateQuery = "UPDATE document SET ";
+  let queryParams = [];
+
+  if (nom !== undefined) {
+    updateQuery += "nom = ?, ";
+    queryParams.push(nom);
+  }
+
+  if (type !== undefined) {
+    updateQuery += "type = ?, ";
+    queryParams.push(type);
+  }
+
+  if (cheminAcces !== undefined) {
+    updateQuery += "cheminAcces = ?, ";
+    queryParams.push(cheminAcces);
+  }
+
+  if (utilisateurId !== undefined) {
+    updateQuery += "utilisateurId = ?, ";
+    queryParams.push(utilisateurId);
+  }
+
+  // Remove the last comma and space
+  updateQuery = updateQuery.slice(0, -2);
+
+  updateQuery += " WHERE id = ?";
+  queryParams.push(req.params.id);
+
+  await pool.query(updateQuery, queryParams);
+  res.status(204).end();
+});
+
 module.exports = router;
