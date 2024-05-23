@@ -18,9 +18,17 @@ router.post("/", async function (req, res, next) {
     dateFinReel,
     chefDeProjetId,
   } = req.body;
+
   const [rows] = await pool.query(
     "INSERT INTO Projet (nom, description, dateDebut, dateFinPrevu, dateFinReel, chefDeProjetId) VALUES (?, ?, ?, ?, ?, ?)",
-    [nom, description, dateDebut, dateFinPrevu, dateFinReel, chefDeProjetId]
+    [
+      nom,
+      description,
+      dateDebut,
+      dateFinPrevu,
+      dateFinReel || null,
+      chefDeProjetId,
+    ]
   );
   res.status(201).json(rows);
 });
