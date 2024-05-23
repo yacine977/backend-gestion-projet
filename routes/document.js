@@ -28,4 +28,10 @@ router.get("/:id", async function (req, res, next) {
   res.json(rows[0]);
 });
 
+//route delete document by id
+router.delete("/:id", async function (req, res, next) {
+  await pool.query("delete from document where id = ?", [req.params.id]);
+  res.status(204).end();
+});
+
 module.exports = router;
