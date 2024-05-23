@@ -28,15 +28,32 @@ router.get("/:id", async function (req, res, next) {
   res.json(rows[0]);
 });
 
-//route delete document by id
-router.delete("/:id", async function (req, res, next) {
-  await pool.query("delete from document where id = ?", [req.params.id]);
-  res.status(204).end();
+// Route GET pour récupérer un document par son ID
+router.get("/:id", async function (req, res, next) {
+  const [rows] = await pool.query("SELECT * FROM document WHERE id = ?", [
+    req.params.id,
+  ]);
+  if (rows.length > 0) {
+    res.json(rows[0]);
+  } else {
+    res.status(404).end();
+  }
 });
 
 //route update document by id
 router.put("/:id", async function (req, res, next) {
   const { nom, type, cheminAcces, utilisateurId } = req.body;
+
+  // First, retrieve the existing data
+  const [existingData] = await pool.query(
+    "SELECT * FROM document WHERE id = ?",
+    [req.params.id]
+  );
+
+  // If the document doesn't exist, return a 404 error
+  if (!existingData.length) {
+    return res.status(404).json({ error: "Document not found" });
+  }
 
   let updateQuery = "UPDATE document SET ";
   let queryParams = [];
@@ -68,7 +85,7 @@ router.put("/:id", async function (req, res, next) {
   queryParams.push(req.params.id);
 
   await pool.query(updateQuery, queryParams);
-  res.status(204).end();
+  res.status(200).json({ message: "Document updated successfully" });
 });
 
 module.exports = router;
