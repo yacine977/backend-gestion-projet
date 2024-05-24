@@ -90,6 +90,12 @@ router.delete("/:id", async function (req, res, next) {
   res.json(rows);
 });
 
-//
+//route pour récupérer les tâches d'un projet spécifique
+router.get("/projet/:projetId", async function (req, res, next) {
+  const [rows] = await pool.query("SELECT * FROM Tache WHERE projetId = ?", [
+    req.params.projetId,
+  ]);
+  res.json(rows);
+});
 
 module.exports = router;
