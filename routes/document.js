@@ -2,16 +2,23 @@ var express = require("express");
 const { pool } = require("../services/database");
 var router = express.Router();
 
-// route pour créer un nouveau document
+// route pour créer un nouveau document pour un projet donné
 router.post("/", async function (req, res, next) {
-  const { nom, type, cheminAcces, utilisateurId } = req.body;
+  const { nom, type, cheminAcces, utilisateurId, projetId } = req.body;
   const [rows] = await pool.query(
-    "INSERT INTO document (nom, type, cheminAcces, utilisateurId) VALUES (?, ?, ?, ?)",
-    [nom, type, cheminAcces, utilisateurId]
+    "INSERT INTO document (nom, type, cheminAcces, utilisateurId, projetId) VALUES (?, ?, ?, ?, ?)",
+    [nom, type, cheminAcces, utilisateurId, projetId]
   );
   res
     .status(201)
-    .json({ id: rows.insertId, nom, type, cheminAcces, utilisateurId });
+    .json({
+      id: rows.insertId,
+      nom,
+      type,
+      cheminAcces,
+      utilisateurId,
+      projetId,
+    });
 });
 
 //route get all documents
