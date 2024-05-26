@@ -9,16 +9,14 @@ router.post("/", async function (req, res, next) {
     "INSERT INTO document (nom, type, cheminAcces, utilisateurId, projetId) VALUES (?, ?, ?, ?, ?)",
     [nom, type, cheminAcces, utilisateurId, projetId]
   );
-  res
-    .status(201)
-    .json({
-      id: rows.insertId,
-      nom,
-      type,
-      cheminAcces,
-      utilisateurId,
-      projetId,
-    });
+  res.status(201).json({
+    id: rows.insertId,
+    nom,
+    type,
+    cheminAcces,
+    utilisateurId,
+    projetId,
+  });
 });
 
 //route get all documents
@@ -49,7 +47,7 @@ router.get("/:id", async function (req, res, next) {
 
 //route update document by id
 router.put("/:id", async function (req, res, next) {
-  const { nom, type, cheminAcces, utilisateurId } = req.body;
+  const { nom, type, cheminAcces, utilisateurId, projetId } = req.body;
 
   // First, retrieve the existing data
   const [existingData] = await pool.query(
@@ -83,6 +81,11 @@ router.put("/:id", async function (req, res, next) {
   if (utilisateurId !== undefined) {
     updateQuery += "utilisateurId = ?, ";
     queryParams.push(utilisateurId);
+  }
+
+  if (projetId !== undefined) {
+    updateQuery += "projetId = ?, ";
+    queryParams.push(projetId);
   }
 
   // Remove the last comma and space
