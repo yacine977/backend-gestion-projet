@@ -110,4 +110,23 @@ router.delete("/:id", async function (req, res, next) {
   }
 });
 
+// Route pour récupérer les documents d'un projet spécifique
+router.get("/projet/:projetId", async function (req, res, next) {
+  const { projetId } = req.params;
+
+  // Récupérer les documents du projet spécifié
+  const [documents] = await pool.query(
+    "SELECT * FROM document WHERE projetId = ?",
+    [projetId]
+  );
+
+  // Si aucun document n'est trouvé, retourner un tableau vide
+  if (!documents.length) {
+    return res.status(200).json([]);
+  }
+
+  // Sinon, retourner les documents trouvés
+  res.status(200).json(documents);
+});
+
 module.exports = router;
