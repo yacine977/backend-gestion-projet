@@ -43,4 +43,40 @@ router.delete("/:id", async function (req, res, next) {
   res.json(rows);
 });
 
+//route pour mettre à jour un ou plusieurs champs d'une réunion par son ID
+router.put("/:id", async function (req, res, next) {
+  const { sujet, dateTime, projetId, createurId } = req.body;
+
+  // First, retrieve the existing data
+  const [existingData] = await pool.query(
+    "SELECT * FROM reunion WHERE id = ?",
+    [req.params.id]
+  );
+
+  // If the reunion doesn't exist, return a 404 error
+  if (!existingData.length) {
+    return res.status(404).json({ error: "Réunion non trouvée" });
+  }
+
+  // Update the fields that were passed
+  const newSujet = sujet || existingData[0].sujet;
+  const newDateTime = dateTime || existingData[0].dateTime;
+  const newProjetId = projetId || existingData[0].projetId;
+  const newCreateurId = createurId || existingData[0].createurId;
+
+  // Update the database
+  await pool.query(
+    "UPDATE reunion SET sujet = ?, dateTime = ?, projetId = ?, createurId = ? WHERE id = ?",
+    [newSujet, newDateTime, newProjetId, newCreateurId, req.params.id]
+  );
+
+  res.json({
+    id: req.params.id,
+    sujet: newSujet,
+    dateTime: newDateTime,
+    projetId: newProjetId,
+    createurId: newCreateurId,
+  });
+});
+
 module.exports = router;
