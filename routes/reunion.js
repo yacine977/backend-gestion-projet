@@ -27,4 +27,12 @@ router.post("/", async function (req, res) {
   }
 });
 
+//route pour récupérer une réunion par son ID
+router.get("/:id", async function (req, res, next) {
+  const [rows] = await pool.query("select * from reunion where id = ?", [
+    req.params.id,
+  ]);
+  res.json(rows[0]);
+});
+
 module.exports = router;
