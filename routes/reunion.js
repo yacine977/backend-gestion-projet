@@ -35,4 +35,12 @@ router.get("/:id", async function (req, res, next) {
   res.json(rows[0]);
 });
 
+//route pour supprimer une réunion par son ID
+router.delete("/:id", async function (req, res, next) {
+  const [rows] = await pool.query("delete from reunion where id = ?", [
+    req.params.id,
+  ]);
+  res.json(rows);
+});
+
 module.exports = router;
