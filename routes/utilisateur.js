@@ -9,6 +9,8 @@ admin.initializeApp({
 const express = require('express');
 const router = express.Router();
 
+
+
 // Route pour définir le rôle d'un utilisateur 
 router.post("/setRole", async function (req, res, next) {
     const uid = req.body.uid;

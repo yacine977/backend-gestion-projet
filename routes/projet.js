@@ -1,15 +1,16 @@
 var express = require("express");
 const { pool } = require("../services/database");
 var router = express.Router();
+const checkRole = require("./middleware");
 
 //route get all projets
-router.get("/", async function (req, res, next) {
+router.get("/",checkRole('PDG'),async function (req, res, next) {
   const [rows] = await pool.query("select * from projet");
   res.json(rows);
 });
 
 //route create new projet
-router.post("/", async function (req, res, next) {
+router.post("/",checkRole('PDG'), async function (req, res, next) {
   const {
     nom,
     description,
@@ -34,7 +35,7 @@ router.post("/", async function (req, res, next) {
 });
 
 //route get projet by id
-router.get("/:id", async function (req, res, next) {
+router.get("/:id",checkRole('PDG'), async function (req, res, next) {
   const [rows] = await pool.query("select * from projet where id = ?", [
     req.params.id,
   ]);
@@ -42,7 +43,7 @@ router.get("/:id", async function (req, res, next) {
 });
 
 //route update projet
-router.put("/:id", async function (req, res, next) {
+router.put("/:id",checkRole('PDG'), async function (req, res, next) {
   try {
     // Récupérer l'objet existant
     const [rows] = await pool.query("SELECT * FROM Projet WHERE id = ?", [
@@ -76,7 +77,7 @@ router.put("/:id", async function (req, res, next) {
 });
 
 //route pour delete projet
-router.delete("/:id", async function (req, res, next) {
+router.delete("/:id",checkRole('PDG'), async function (req, res, next) {
   const [rows] = await pool.query("DELETE FROM Projet WHERE id = ?", [
     req.params.id,
   ]);
@@ -84,7 +85,7 @@ router.delete("/:id", async function (req, res, next) {
 });
 
 // route pour valider un projet
-router.put("/:id/valider", async function (req, res, next) {
+router.put("/:id/valider",checkRole('PDG'), async function (req, res, next) {
   const id = req.params.id;
   try {
     const [results] = await pool.query(
@@ -102,7 +103,7 @@ router.put("/:id/valider", async function (req, res, next) {
 });
 
 // route pour modifier le chef de projet d'un projet
-router.put("/:id/chef", async function (req, res, next) {
+router.put("/:id/chef",checkRole('PDG'), async function (req, res, next) {
   const id = req.params.id;
   const chefDeProjetId = req.body.chefDeProjetId;
   try {
@@ -121,7 +122,7 @@ router.put("/:id/chef", async function (req, res, next) {
 });
 
 // route pour assigner des utilisateurs à un projet
-router.post("/:id/assigner", async function (req, res, next) {
+router.post("/:id/assigner",checkRole('PDG'), async function (req, res, next) {
   const idProjet = req.params.id;
   const utilisateurs = req.body.utilisateurs; // un tableau d'id d'utilisateurs
 
