@@ -11,6 +11,7 @@ var projetRouter = require("./routes/projet");
 var tacheRouter = require("./routes/tache");
 var documentRouter = require("./routes/document");
 var reunionRouter = require("./routes/reunion");
+var utilisateurRouter = require("./routes/utilisateur");
 
 var app = express();
 
@@ -32,6 +33,7 @@ app.use("/projet", projetRouter);
 app.use("/tache", tacheRouter);
 app.use("/document", documentRouter);
 app.use("/reunion", reunionRouter);
+app.use("/utilisateur", utilisateurRouter);
 
 //catch 404 and forward to error handler
 app.use(function (req, res, next) {
