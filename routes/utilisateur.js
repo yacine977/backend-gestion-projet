@@ -12,13 +12,13 @@ const router = express.Router();
 // Route pour définir le rôle d'un utilisateur 
 router.post("/setRole", async function (req, res, next) {
     const uid = req.body.uid;
+    const role = req.body.role; // Récupérez le rôle du corps de la requête
   
     // Définissez le rôle de l'utilisateur
-    await admin.auth().setCustomUserClaims(uid, {role: 'standard'});
+    await admin.auth().setCustomUserClaims(uid, {role: role});
 
-  
     // Répondez à la requête
-    res.json({message: 'Rôle utilisateur standard défini avec succès'});
+    res.json({message: `Rôle utilisateur ${role} défini avec succès`});
 });
 
 // Route pour obtenir le rôle d'un utilisateur
