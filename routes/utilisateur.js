@@ -9,6 +9,21 @@ admin.initializeApp({
 const express = require('express');
 const router = express.Router();
 
+//route get all utilisateurs
+router.get("/allUsers", async function (req, res, next) {
+  const users = await admin.auth().listUsers();
+  const usersList = users.users.map((user) => {
+    return {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      emailVerified: user.emailVerified,
+      disabled: user.disabled,
+    };
+  });
+  res.json(usersList);
+});
 
 
 // Route pour définir le rôle d'un utilisateur 
