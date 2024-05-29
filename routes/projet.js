@@ -4,13 +4,13 @@ var router = express.Router();
 const checkRole = require("./middleware");
 
 //route get all projets
-router.get("/",checkRole('PDG'),async function (req, res, next) {
+router.get("/", checkRole("PDG"), async function (req, res, next) {
   const [rows] = await pool.query("select * from projet");
   res.json(rows);
 });
 
 //route create new projet
-router.post("/",checkRole('PDG'), async function (req, res, next) {
+router.post("/", checkRole("PDG"), async function (req, res, next) {
   const {
     nom,
     description,
@@ -35,7 +35,7 @@ router.post("/",checkRole('PDG'), async function (req, res, next) {
 });
 
 //route get projet by id
-router.get("/:id",checkRole('PDG'), async function (req, res, next) {
+router.get("/:id", checkRole("PDG"), async function (req, res, next) {
   const [rows] = await pool.query("select * from projet where id = ?", [
     req.params.id,
   ]);
@@ -43,7 +43,7 @@ router.get("/:id",checkRole('PDG'), async function (req, res, next) {
 });
 
 //route update projet
-router.put("/:id",checkRole('PDG'), async function (req, res, next) {
+router.put("/:id", checkRole("PDG"), async function (req, res, next) {
   try {
     // Récupérer l'objet existant
     const [rows] = await pool.query("SELECT * FROM Projet WHERE id = ?", [
@@ -77,7 +77,7 @@ router.put("/:id",checkRole('PDG'), async function (req, res, next) {
 });
 
 //route pour delete projet
-router.delete("/:id",checkRole('PDG'), async function (req, res, next) {
+router.delete("/:id", checkRole("PDG"), async function (req, res, next) {
   const [rows] = await pool.query("DELETE FROM Projet WHERE id = ?", [
     req.params.id,
   ]);
@@ -85,7 +85,7 @@ router.delete("/:id",checkRole('PDG'), async function (req, res, next) {
 });
 
 // route pour valider un projet
-router.put("/:id/valider",checkRole('PDG'), async function (req, res, next) {
+router.put("/:id/valider", checkRole("PDG"), async function (req, res, next) {
   const id = req.params.id;
   try {
     const [results] = await pool.query(
@@ -103,7 +103,7 @@ router.put("/:id/valider",checkRole('PDG'), async function (req, res, next) {
 });
 
 // route pour modifier le chef de projet d'un projet
-router.put("/:id/chef",checkRole('PDG'), async function (req, res, next) {
+router.put("/:id/chef", checkRole("PDG"), async function (req, res, next) {
   const id = req.params.id;
   const chefDeProjetId = req.body.chefDeProjetId;
   try {
@@ -121,31 +121,35 @@ router.put("/:id/chef",checkRole('PDG'), async function (req, res, next) {
   }
 });
 
-// route pour assigner des utilisateurs à un projet
-router.post("/:id/assigner",checkRole('PDG'), async function (req, res, next) {
-  const idProjet = req.params.id;
-  const utilisateurs = req.body.utilisateurs; // un tableau d'id d'utilisateurs
+// route pour assigner des utilisateurs Firebase à un projet
+router.post(
+  "/:id/assignerFirebase",
+  checkRole("PDG"),
+  async function (req, res, next) {
+    const idProjet = req.params.id;
+    const utilisateurs = req.body.utilisateurs; // un tableau d'UIDs d'utilisateurs Firebase
 
-  try {
-    // commence une transaction
-    await pool.query("START TRANSACTION");
+    try {
+      // commence une transaction
+      await pool.query("START TRANSACTION");
 
-    for (let idUtilisateur of utilisateurs) {
-      await pool.query(
-        "INSERT INTO projet_utilisateur (projetId, utilisateurId) VALUES (?, ?)",
-        [idProjet, idUtilisateur]
-      );
+      for (let uidUtilisateur of utilisateurs) {
+        await pool.query(
+          "INSERT INTO projet_utilisateur (projetId, utilisateurId) VALUES (?, ?)",
+          [idProjet, uidUtilisateur]
+        );
+      }
+
+      // termine la transaction
+      await pool.query("COMMIT");
+
+      res.json({ message: "Utilisateurs Firebase assignés au projet" });
+    } catch (err) {
+      // en cas d'erreur, annule la transaction
+      await pool.query("ROLLBACK");
+      next(err);
     }
-
-    // termine la transaction
-    await pool.query("COMMIT");
-
-    res.json({ message: "Utilisateurs assignés au projet" });
-  } catch (err) {
-    // en cas d'erreur, annule la transaction
-    await pool.query("ROLLBACK");
-    next(err);
   }
-});
+);
 
 module.exports = router;
