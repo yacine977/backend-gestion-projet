@@ -79,4 +79,12 @@ router.put("/:id", async function (req, res, next) {
   });
 });
 
+//route pour récupérer les réunions associées à un ID de projet spécifique
+router.get("/par-projet/:projetId", async function (req, res, next) {
+  const [rows] = await pool.query("select * from reunion where projetId = ?", [
+    req.params.projetId,
+  ]);
+  res.json(rows);
+});
+
 module.exports = router;
