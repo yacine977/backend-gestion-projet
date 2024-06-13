@@ -25,6 +25,18 @@ router.post("/createUser", async function (req, res, next) {
   }
 });
 
+//route pour supprimer un utilisateur firebase
+router.delete("/deleteUser/:uid", async function (req, res, next) {
+  const uid = req.params.uid;
+
+  try {
+    await admin.auth().deleteUser(uid);
+    res.json({ message: "Utilisateur supprimé avec succès" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 //route get all utilisateurs firebase
 router.get("/allUsers", async function (req, res, next) {
   const users = await admin.auth().listUsers();
