@@ -37,6 +37,23 @@ router.delete("/deleteUser/:uid", async function (req, res, next) {
   }
 });
 
+//route pour mettre à jour un utilisateur firebase
+router.put("/updateUser/:uid", async function (req, res, next) {
+  const uid = req.params.uid;
+  const email = req.body.email;
+  const password = req.body.password;
+
+  try {
+    await admin.auth().updateUser(uid, {
+      email: email,
+      password: password,
+    });
+    res.json({ message: "Utilisateur mis à jour avec succès" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 //route get all utilisateurs firebase
 router.get("/allUsers", async function (req, res, next) {
   const users = await admin.auth().listUsers();
