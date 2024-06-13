@@ -2,12 +2,13 @@ var express = require("express");
 const { pool } = require("../services/database");
 var router = express.Router();
 
-// route pour récupérer toutes les réunions avec le nom du projet
+// route pour récupérer toutes les réunions avec le nom du projet et le nom du créateur
 router.get("/", async function (req, res, next) {
   const query = `
-    SELECT reunion.*, projet.nom AS nomProjet
+    SELECT reunion.*, projet.nom AS nomProjet, utilisateur.nom AS nomCreateur
     FROM reunion
     JOIN projet ON reunion.projetId = projet.id
+    JOIN utilisateur ON reunion.createurId = utilisateur.utilisateurId
   `;
   try {
     const [rows] = await pool.query(query);
