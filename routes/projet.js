@@ -107,35 +107,41 @@ router.put("/:id/chef", checkRole("PDG"), async function (req, res, next) {
   }
 });
 
-// route pour assigner des utilisateurs Firebase à un projet
-router.post(
-  "/:id/assignerFirebase",
-  checkRole("PDG"),
-  async function (req, res, next) {
-    const idProjet = req.params.id;
-    const utilisateurs = req.body.utilisateurs; // un tableau d'UIDs d'utilisateurs Firebase
-
-    try {
-      // commence une transaction
-      await pool.query("START TRANSACTION");
-
-      for (let uidUtilisateur of utilisateurs) {
-        await pool.query(
-          "INSERT INTO projet_utilisateur (projetId, utilisateurId) VALUES (?, ?)",
-          [idProjet, uidUtilisateur]
-        );
-      }
-
-      // termine la transaction
-      await pool.query("COMMIT");
-
-      res.json({ message: "Utilisateurs Firebase assignés au projet" });
-    } catch (err) {
-      // en cas d'erreur, annule la transaction
-      await pool.query("ROLLBACK");
-      next(err);
+// route pour assigner un utilisateur firebase à un projet
+router.put("/:id/assigner", checkRole("PDG"), async function (req, res, next) {
+  const id = req.params.id;
+  const uid = req.body.uid;
+  try {
+    const [results] = await pool.query(
+      "UPDATE projet SET uid = ? WHERE id = ?",
+      [uid, id]
+    );
+    if (results.affectedRows === 0) {
+      res.status(404).json({ message: "Projet non trouvé" });
+    } else {
+      res.json({ message: "Utilisateur assigné au projet" });
     }
+  } catch (err) {
+    next(err);
   }
-);
+});
+
+// route pour renvoyer selement les noms des projets auquel un utilisateur est assigné
+router.get("/par-utilisateur/:uid", checkRole("PDG"), async function (req, res, next) {
+  const uid = req.params.uid;
+  try {
+    const [rows] = await pool.query("SELECT nom FROM projet WHERE uid = ?", [
+      uid,
+    ]);
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+
+
+
 
 module.exports = router;
