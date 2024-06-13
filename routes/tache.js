@@ -98,22 +98,8 @@ router.get("/projet/:projetId", async function (req, res, next) {
   res.json(rows);
 });
 
-router.post("/assignerTache", async function (req, res, next) {
-  const { utilisateurId, tacheId } = req.body;
 
-  try {
-    // Vérifier si l'assignation existe déjà
-    const [existingAssignation] = await pool.query("SELECT * FROM assignationtache WHERE utilisateurId = ? AND tacheId = ?", [utilisateurId, tacheId]);
-    if (existingAssignation.length > 0) {
-      return res.status(400).json({ message: "Cette tâche est déjà assignée à cet utilisateur." });
-    }
 
-    // Insérer la nouvelle assignation
-    await pool.query("INSERT INTO assignationtache (utilisateurId, tacheId) VALUES (?, ?)", [utilisateurId, tacheId]);
-    res.json({ message: "Tâche assignée avec succès à l'utilisateur." });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
+
 
 module.exports = router;
