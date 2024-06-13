@@ -2,10 +2,20 @@ var express = require("express");
 const { pool } = require("../services/database");
 var router = express.Router();
 
-// route pour recupérer toutes les réunions
+// route pour récupérer toutes les réunions avec le nom du projet
 router.get("/", async function (req, res, next) {
-  const [rows] = await pool.query("select * from reunion");
-  res.json(rows);
+  const query = `
+    SELECT reunion.*, projet.nom AS nomProjet
+    FROM reunion
+    JOIN projet ON reunion.projetId = projet.id
+  `;
+  try {
+    const [rows] = await pool.query(query);
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Erreur lors de la récupération des réunions");
+  }
 });
 
 //route pour créer une nouvelle réunion pour un projet donné
