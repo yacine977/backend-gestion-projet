@@ -11,25 +11,11 @@ router.get("/", checkRole("PDG"), async function (req, res, next) {
 
 //route create new projet
 router.post("/", checkRole("PDG"), async function (req, res, next) {
-  const {
-    nom,
-    description,
-    dateDebut,
-    dateFinPrevu,
-    dateFinReel,
-    chefDeProjetId,
-  } = req.body;
+  const { nom, description, dateDebut, dateFinPrevu, dateFinReel } = req.body;
 
   const [rows] = await pool.query(
-    "INSERT INTO Projet (nom, description, dateDebut, dateFinPrevu, dateFinReel, chefDeProjetId) VALUES (?, ?, ?, ?, ?, ?)",
-    [
-      nom,
-      description,
-      dateDebut,
-      dateFinPrevu,
-      dateFinReel || null,
-      chefDeProjetId,
-    ]
+    "INSERT INTO Projet (nom, description, dateDebut, dateFinPrevu, dateFinReel) VALUES (?, ?, ?, ?, ?)",
+    [nom, description, dateDebut, dateFinPrevu, dateFinReel || null]
   );
   res.status(201).json(rows);
 });
@@ -59,14 +45,14 @@ router.put("/:id", checkRole("PDG"), async function (req, res, next) {
 
     // Effectuer la mise à jour
     const [updateRows] = await pool.query(
-      "UPDATE Projet SET nom = ?, description = ?, dateDebut = ?, dateFinPrevu = ?, dateFinReel = ?, chefDeProjetId = ? WHERE id = ?",
+      "UPDATE Projet SET nom = ?, description = ?, dateDebut = ?, dateFinPrevu = ?, dateFinReel = ? WHERE id = ?",
       [
         newData.nom,
         newData.description,
         newData.dateDebut,
         newData.dateFinPrevu,
         newData.dateFinReel,
-        newData.chefDeProjetId,
+
         req.params.id,
       ]
     );
