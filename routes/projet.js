@@ -3,11 +3,13 @@ const { pool } = require("../services/database");
 var router = express.Router();
 const checkRole = require("./middleware");
 
-//route get all projets
-router.get("/", checkRole("PDG"), async function (req, res, next) {
+//route get all projets sans role
+router.get("/", async function (req, res, next) {
   const [rows] = await pool.query("select * from projet");
   res.json(rows);
 });
+
+
 
 //route create new projet
 router.post("/", checkRole("PDG"), async function (req, res, next) {
@@ -21,12 +23,13 @@ router.post("/", checkRole("PDG"), async function (req, res, next) {
 });
 
 //route get projet by id
-router.get("/:id", checkRole("PDG"), async function (req, res, next) {
+router.get("/:id", async function (req, res, next) {
   const [rows] = await pool.query("select * from projet where id = ?", [
     req.params.id,
   ]);
   res.json(rows);
 });
+
 
 //route update projet
 router.put("/:id", checkRole("PDG"), async function (req, res, next) {
