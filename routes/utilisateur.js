@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
+const serviceAccount = require("../service-account-key.json");
 
-var serviceAccount = require("../service-account-key.json");
-
+// Initialisation de l'application Firebase avec les identifiants de service
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
@@ -9,25 +9,21 @@ admin.initializeApp({
 const express = require("express");
 const router = express.Router();
 
-//route pour créer un utilisateur firebase
-router.post("/createUser", async function (req, res, next) {
-  const email = req.body.email;
-  const password = req.body.password;
+// Création d'un utilisateur Firebase
+router.post("/createUser", async (req, res) => {
+  const { email, password } = req.body;
 
   try {
-    const user = await admin.auth().createUser({
-      email: email,
-      password: password,
-    });
+    const user = await admin.auth().createUser({ email, password });
     res.json(user);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-//route pour supprimer un utilisateur firebase
-router.delete("/deleteUser/:uid", async function (req, res, next) {
-  const uid = req.params.uid;
+// Suppression d'un utilisateur Firebase
+router.delete("/deleteUser/:uid", async (req, res) => {
+  const { uid } = req.params;
 
   try {
     await admin.auth().deleteUser(uid);
@@ -37,75 +33,64 @@ router.delete("/deleteUser/:uid", async function (req, res, next) {
   }
 });
 
-//route pour mettre à jour un utilisateur firebase
-router.put("/updateUser/:uid", async function (req, res, next) {
-  const uid = req.params.uid;
-  const email = req.body.email;
-  const password = req.body.password;
+// Mise à jour d'un utilisateur Firebase
+router.put("/updateUser/:uid", async (req, res) => {
+  const { uid } = req.params;
+  const { email, password } = req.body;
 
   try {
-    await admin.auth().updateUser(uid, {
-      email: email,
-      password: password,
-    });
+    await admin.auth().updateUser(uid, { email, password });
     res.json({ message: "Utilisateur mis à jour avec succès" });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-//route get all utilisateurs firebase
-router.get("/allUsers", async function (req, res, next) {
-  const users = await admin.auth().listUsers();
-  const usersList = users.users.map((user) => {
-    return {
+// Récupération de tous les utilisateurs Firebase
+router.get("/allUsers", async (req, res) => {
+  try {
+    const users = await admin.auth().listUsers();
+    const usersList = users.users.map((user) => ({
       uid: user.uid,
       email: user.email,
       displayName: user.displayName,
       photoURL: user.photoURL,
       emailVerified: user.emailVerified,
       disabled: user.disabled,
-    };
-  });
-  res.json(usersList);
-});
-
-
-
-// Route pour définir le rôle d'un utilisateur
-router.post("/setRole", async function (req, res, next) {
-  const uid = req.body.uid;
-  const role = req.body.role; // Récupérez le rôle du corps de la requête
-
-  // Définissez le rôle de l'utilisateur
-  await admin.auth().setCustomUserClaims(uid, { role: role });
-
-  // Répondez à la requête
-  res.json({ message: `Rôle utilisateur ${role} défini avec succès` });
-});
-
-// Route pour obtenir le rôle d'un utilisateur
-router.get("/getRole/:uid", async function (req, res, next) {
-  const uid = req.params.uid;
-
-  // Obtenez les informations de l'utilisateur
-  const user = await admin.auth().getUser(uid);
-
-  // Vérifiez si l'utilisateur a des claims personnalisés
-  if (user.customClaims) {
-    // Récupérez le rôle de l'utilisateur à partir des claims personnalisés
-    const role = user.customClaims.role;
-
-    // Répondez à la requête
-    res.json({ role: role });
-  } else {
-    // L'utilisateur n'a pas de rôle défini
-    res.json({ message: "L'utilisateur n'a pas de rôle défini" });
+    }));
+    res.json(usersList);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 });
 
+// Définition du rôle d'un utilisateur
+router.post("/setRole", async (req, res) => {
+  const { uid, role } = req.body;
 
+  try {
+    await admin.auth().setCustomUserClaims(uid, { role });
+    res.json({ message: `Rôle utilisateur ${role} défini avec succès` });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
 
+// Obtention du rôle d'un utilisateur
+router.get("/getRole/:uid", async (req, res) => {
+  const { uid } = req.params;
 
+  try {
+    const user = await admin.auth().getUser(uid);
+    const role = user.customClaims ? user.customClaims.role : null;
+    if (role) {
+      res.json({ role });
+    } else {
+      res.json({ message: "L'utilisateur n'a pas de rôle défini" });
+    }
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
 
 module.exports = router;
