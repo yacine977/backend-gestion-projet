@@ -110,37 +110,60 @@ router.put("/:id/chef", checkRole("PDG"), async function (req, res, next) {
   }
 });
 
-// route pour assigner un utilisateur firebase à un projet
-router.put("/:id/assigner", checkRole("PDG"), async function (req, res, next) {
+// route pour assigner des utilisateur firebase à un projet 
+router.post("/:id/assigner", async function (req, res, next) {
   const id = req.params.id;
   const uid = req.body.uid;
   try {
     const [results] = await pool.query(
-      "UPDATE projet SET uid = ? WHERE id = ?",
-      [uid, id]
+      "INSERT INTO projet_utilisateur (id, uid) VALUES (?, ?)",
+      [id, uid]
     );
-    if (results.affectedRows === 0) {
-      res.status(404).json({ message: "Projet non trouvé" });
-    } else {
-      res.json({ message: "Utilisateur assigné au projet" });
-    }
+    res.json(results);
   } catch (err) {
     next(err);
   }
 });
 
-// route pour renvoyer selement les noms des projets auquel un utilisateur est assigné
-router.get("/par-utilisateur/:uid", checkRole("PDG"), async function (req, res, next) {
+//route pour renvoyer selement les noms des projets auquel un utilisateur est assigné
+router.get("/utilisateur/:uid", async function (req, res, next) {
   const uid = req.params.uid;
   try {
-    const [rows] = await pool.query("SELECT nom FROM projet WHERE uid = ?", [
-      uid,
-    ]);
+    const [rows] = await pool.query(
+      "SELECT nom FROM projet WHERE id IN (SELECT id FROM projet_utilisateur WHERE uid = ?)",
+      [uid]
+    );
     res.json(rows);
   } catch (err) {
     next(err);
   }
 });
+
+//route pour afficher la liste des utilisateurs firebase assignés à un projet
+router.get("/:id/utilisateurs", async function (req, res, next) {
+  const id = req.params.id;
+  try {
+    const [rows] = await pool.query(
+      "SELECT uid FROM projet_utilisateur WHERE id = ?",
+      [id]
+    );
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -98,6 +98,34 @@ router.get("/projet/:projetId", async function (req, res, next) {
   res.json(rows);
 });
 
+//route pour assigner des taches à un utilisateur firebase
+router.post("/assigner", async function (req, res, next) {
+  const { tacheId, uid } = req.body;
+
+  const [rows] = await pool.query(
+    "INSERT INTO assignationtache (tacheId, uid) VALUES (?, ?)",
+    [tacheId, uid]
+  );
+  res.json(rows);
+});
+
+//route pour obtenir la liste des taches assignées à un utilisateur firebase
+router.get("/par-utilisateur/:uid", async function (req, res, next) {
+  const uid = req.params.uid;
+
+  try {
+    const [rows] = await pool.query(
+      "SELECT tacheId FROM assignationtache WHERE uid = ?",
+      [uid]
+    );
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+
 
 
 

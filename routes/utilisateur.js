@@ -70,6 +70,8 @@ router.get("/allUsers", async function (req, res, next) {
   res.json(usersList);
 });
 
+
+
 // Route pour définir le rôle d'un utilisateur
 router.post("/setRole", async function (req, res, next) {
   const uid = req.body.uid;
@@ -101,5 +103,9 @@ router.get("/getRole/:uid", async function (req, res, next) {
     res.json({ message: "L'utilisateur n'a pas de rôle défini" });
   }
 });
+
+
+
+
 
 module.exports = router;
