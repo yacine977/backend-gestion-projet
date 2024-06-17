@@ -2,13 +2,15 @@ var express = require("express");
 const { pool } = require("../services/database");
 var router = express.Router();
 
-// route pour créer un nouveau document pour un projet donné
+// Crée un nouveau document pour un projet spécifique
 router.post("/", async function (req, res, next) {
   const { nom, type, cheminAcces, utilisateurId, projetId } = req.body;
+  // Exécute la requête d'insertion dans la base de données
   const [rows] = await pool.query(
     "INSERT INTO document (nom, type, cheminAcces, utilisateurId, projetId) VALUES (?, ?, ?, ?, ?)",
     [nom, type, cheminAcces, utilisateurId, projetId]
   );
+  // Renvoie le document créé avec un statut 201
   res.status(201).json({
     id: rows.insertId,
     nom,
@@ -19,50 +21,48 @@ router.post("/", async function (req, res, next) {
   });
 });
 
-//route get all documents
+// Récupère tous les documents
 router.get("/", async function (req, res, next) {
-  const [rows] = await pool.query("select * from document");
+  // Sélectionne tous les documents de la base de données
+  const [rows] = await pool.query("SELECT * FROM document");
+  // Renvoie les documents trouvés
   res.json(rows);
 });
 
-//route get document by id
+// Récupère un document par son ID
 router.get("/:id", async function (req, res, next) {
-  const [rows] = await pool.query("select * from document where id = ?", [
-    req.params.id,
-  ]);
-  res.json(rows[0]);
-});
-
-// Route GET pour récupérer un document par son ID
-router.get("/:id", async function (req, res, next) {
+  // Sélectionne un document par son ID
   const [rows] = await pool.query("SELECT * FROM document WHERE id = ?", [
     req.params.id,
   ]);
   if (rows.length > 0) {
+    // Si le document existe, le renvoie
     res.json(rows[0]);
   } else {
+    // Sinon, renvoie un statut 404
     res.status(404).end();
   }
 });
 
-//route update document by id
+// Met à jour un document par son ID
 router.put("/:id", async function (req, res, next) {
   const { nom, type, cheminAcces, utilisateurId, projetId } = req.body;
 
-  // First, retrieve the existing data
+  // Vérifie d'abord si le document existe
   const [existingData] = await pool.query(
     "SELECT * FROM document WHERE id = ?",
     [req.params.id]
   );
 
-  // If the document doesn't exist, return a 404 error
   if (!existingData.length) {
+    // Si le document n'existe pas, renvoie une erreur 404
     return res.status(404).json({ error: "Document not found" });
   }
 
   let updateQuery = "UPDATE document SET ";
   let queryParams = [];
 
+  // Construit dynamiquement la requête de mise à jour en fonction des champs fournis
   if (nom !== undefined) {
     updateQuery += "nom = ?, ";
     queryParams.push(nom);
@@ -88,44 +88,45 @@ router.put("/:id", async function (req, res, next) {
     queryParams.push(projetId);
   }
 
-  // Remove the last comma and space
-  updateQuery = updateQuery.slice(0, -2);
-
+  updateQuery = updateQuery.slice(0, -2); // Supprime la dernière virgule et espace
   updateQuery += " WHERE id = ?";
   queryParams.push(req.params.id);
 
+  // Exécute la requête de mise à jour
   await pool.query(updateQuery, queryParams);
   res.status(200).json({ message: "Document updated successfully" });
 });
 
-//route delete document by id
+// Supprime un document par son ID
 router.delete("/:id", async function (req, res, next) {
+  // Exécute la requête de suppression
   const [rows] = await pool.query("DELETE FROM document WHERE id = ?", [
     req.params.id,
   ]);
   if (rows.affectedRows === 0) {
+    // Si aucun document n'est supprimé, renvoie une erreur 404
     res.status(404).json({ message: "Document not found" });
   } else {
+    // Sinon, confirme la suppression
     res.status(200).json({ message: "Document deleted successfully" });
   }
 });
 
-// Route pour récupérer les documents d'un projet spécifique
+// Récupère les documents d'un projet spécifique
 router.get("/projet/:projetId", async function (req, res, next) {
   const { projetId } = req.params;
-
-  // Récupérer les documents du projet spécifié
+  // Sélectionne les documents d'un projet spécifique
   const [documents] = await pool.query(
     "SELECT * FROM document WHERE projetId = ?",
     [projetId]
   );
 
-  // Si aucun document n'est trouvé, retourner un tableau vide
   if (!documents.length) {
+    // Si aucun document n'est trouvé, renvoie un tableau vide
     return res.status(200).json([]);
   }
 
-  // Sinon, retourner les documents trouvés
+  // Sinon, renvoie les documents trouvés
   res.status(200).json(documents);
 });
 

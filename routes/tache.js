@@ -2,27 +2,27 @@ var express = require("express");
 const { pool } = require("../services/database");
 var router = express.Router();
 
-//route get all taches
+// Route pour récupérer toutes les tâches
 router.get("/", async function (req, res, next) {
-  const [rows] = await pool.query("select * from tache");
+  const [rows] = await pool.query("SELECT * FROM tache");
   res.json(rows);
 });
 
-//route get tache by id
+// Route pour récupérer une tâche par son ID
 router.get("/:id", async function (req, res, next) {
-  const [rows] = await pool.query("select * from tache where id = ?", [
+  const [rows] = await pool.query("SELECT * FROM tache WHERE id = ?", [
     req.params.id,
   ]);
   res.json(rows[0]);
 });
 
-// route pour créer une tâche
+// Route pour créer une nouvelle tâche
 router.post("/", async function (req, res, next) {
   const { description, priorite, statut, dateDebut, dateFinPrevu, projetId } =
     req.body;
-
   let { dateFinReel } = req.body;
 
+  // Si dateFinReel n'est pas fournie, la définir sur null
   if (!dateFinReel) {
     dateFinReel = null;
   }
@@ -42,27 +42,22 @@ router.post("/", async function (req, res, next) {
   res.json(rows);
 });
 
-//route pour modifier une tache
+// Route pour modifier une tâche existante
 router.put("/:id", async function (req, res, next) {
   try {
-    // Récupérer l'objet existant
     const [rows] = await pool.query("SELECT * FROM Tache WHERE id = ?", [
       req.params.id,
     ]);
     const oldData = rows[0];
 
-    // Fusionner les anciennes et les nouvelles valeurs
-    const newData = {
-      ...oldData,
-      ...req.body,
-    };
+    // Fusionner les données existantes avec les nouvelles valeurs fournies
+    const newData = { ...oldData, ...req.body };
 
-    // Si dateFinReel n'est pas fournie, la définir sur null
+    // Si dateFinReel n'est pas fournie dans les nouvelles valeurs, la définir sur null
     if (!newData.dateFinReel) {
       newData.dateFinReel = null;
     }
 
-    // Effectuer la mise à jour
     const [updateRows] = await pool.query(
       "UPDATE Tache SET description = ?, priorite = ?, statut = ?, dateDebut = ?, dateFinPrevu = ?, dateFinReel = ?, projetId = ? WHERE id = ?",
       [
@@ -82,7 +77,7 @@ router.put("/:id", async function (req, res, next) {
   }
 });
 
-//route pour supprimer une tache
+// Route pour supprimer une tâche
 router.delete("/:id", async function (req, res, next) {
   const [rows] = await pool.query("DELETE FROM Tache WHERE id = ?", [
     req.params.id,
@@ -90,7 +85,7 @@ router.delete("/:id", async function (req, res, next) {
   res.json(rows);
 });
 
-//route pour récupérer les tâches d'un projet spécifique
+// Route pour récupérer les tâches d'un projet spécifique
 router.get("/projet/:projetId", async function (req, res, next) {
   const [rows] = await pool.query("SELECT * FROM Tache WHERE projetId = ?", [
     req.params.projetId,
@@ -98,7 +93,7 @@ router.get("/projet/:projetId", async function (req, res, next) {
   res.json(rows);
 });
 
-//route pour assigner des taches à un utilisateur firebase
+// Route pour assigner des tâches à un utilisateur Firebase
 router.post("/assigner", async function (req, res, next) {
   const { tacheId, uid } = req.body;
 
@@ -109,25 +104,14 @@ router.post("/assigner", async function (req, res, next) {
   res.json(rows);
 });
 
-//route pour obtenir la liste des taches assignées à un utilisateur firebase
+// Route pour obtenir la liste des tâches avec tous les champ pour un utilisateur Firebase
 router.get("/par-utilisateur/:uid", async function (req, res, next) {
-  const uid = req.params.uid;
-
-  try {
-    const [rows] = await pool.query(
-      "SELECT tacheId FROM assignationtache WHERE uid = ?",
-      [uid]
-    );
-    res.json(rows);
-  } catch (err) {
-    next(err);
-  }
+  const [rows] = await pool.query(
+    "SELECT t.id, t.description, t.priorite, t.statut, t.dateDebut, t.dateFinPrevu, t.dateFinReel, t.projetId FROM Tache t JOIN assignationtache a ON t.id = a.tacheId WHERE a.uid = ?",
+    [req.params.uid]
+  );
+  res.json(rows);
 });
-
-
-
-
-
 
 
 module.exports = router;

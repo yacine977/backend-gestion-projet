@@ -1,17 +1,16 @@
+// Importation des modules nécessaires
 var express = require("express");
 const { pool } = require("../services/database");
 var router = express.Router();
 const checkRole = require("./middleware");
 
-//route get all projets sans role
+// Route pour récupérer tous les projets sans restriction de rôle
 router.get("/", async function (req, res, next) {
-  const [rows] = await pool.query("select * from projet");
+  const [rows] = await pool.query("SELECT * FROM projet");
   res.json(rows);
 });
 
-
-
-//route create new projet
+// Route pour créer un nouveau projet, accessible uniquement par le PDG
 router.post("/", checkRole("PDG"), async function (req, res, next) {
   const { nom, description, dateDebut, dateFinPrevu, dateFinReel } = req.body;
 
@@ -22,31 +21,27 @@ router.post("/", checkRole("PDG"), async function (req, res, next) {
   res.status(201).json(rows);
 });
 
-//route get projet by id
+// Route pour récupérer un projet par son ID
 router.get("/:id", async function (req, res, next) {
-  const [rows] = await pool.query("select * from projet where id = ?", [
+  const [rows] = await pool.query("SELECT * FROM projet WHERE id = ?", [
     req.params.id,
   ]);
   res.json(rows);
 });
 
-
-//route update projet
+// Route pour mettre à jour un projet, accessible uniquement par le PDG
 router.put("/:id", checkRole("PDG"), async function (req, res, next) {
   try {
-    // Récupérer l'objet existant
     const [rows] = await pool.query("SELECT * FROM Projet WHERE id = ?", [
       req.params.id,
     ]);
     const oldData = rows[0];
 
-    // Fusionner les anciennes et les nouvelles valeurs
     const newData = {
       ...oldData,
       ...req.body,
     };
 
-    // Effectuer la mise à jour
     const [updateRows] = await pool.query(
       "UPDATE Projet SET nom = ?, description = ?, dateDebut = ?, dateFinPrevu = ?, dateFinReel = ? WHERE id = ?",
       [
@@ -55,7 +50,6 @@ router.put("/:id", checkRole("PDG"), async function (req, res, next) {
         newData.dateDebut,
         newData.dateFinPrevu,
         newData.dateFinReel,
-
         req.params.id,
       ]
     );
@@ -65,7 +59,7 @@ router.put("/:id", checkRole("PDG"), async function (req, res, next) {
   }
 });
 
-//route pour delete projet
+// Route pour supprimer un projet, accessible uniquement par le PDG
 router.delete("/:id", checkRole("PDG"), async function (req, res, next) {
   const [rows] = await pool.query("DELETE FROM Projet WHERE id = ?", [
     req.params.id,
@@ -73,7 +67,7 @@ router.delete("/:id", checkRole("PDG"), async function (req, res, next) {
   res.json(rows);
 });
 
-// route pour valider un projet
+// Route pour valider un projet, accessible uniquement par le PDG
 router.put("/:id/valider", checkRole("PDG"), async function (req, res, next) {
   const id = req.params.id;
   try {
@@ -91,7 +85,7 @@ router.put("/:id/valider", checkRole("PDG"), async function (req, res, next) {
   }
 });
 
-// route pour modifier le chef de projet d'un projet
+// Route pour modifier le chef de projet, accessible uniquement par le PDG
 router.put("/:id/chef", checkRole("PDG"), async function (req, res, next) {
   const id = req.params.id;
   const chefDeProjetId = req.body.chefDeProjetId;
@@ -110,7 +104,7 @@ router.put("/:id/chef", checkRole("PDG"), async function (req, res, next) {
   }
 });
 
-// route pour assigner des utilisateur firebase à un projet 
+// Route pour assigner des utilisateurs Firebase à un projet
 router.post("/:id/assigner", async function (req, res, next) {
   const id = req.params.id;
   const uid = req.body.uid;
@@ -125,7 +119,7 @@ router.post("/:id/assigner", async function (req, res, next) {
   }
 });
 
-//route pour renvoyer selement les noms des projets auquel un utilisateur est assigné
+// Route pour récupérer les noms des projets auxquels un utilisateur est assigné
 router.get("/utilisateur/:uid", async function (req, res, next) {
   const uid = req.params.uid;
   try {
@@ -139,7 +133,7 @@ router.get("/utilisateur/:uid", async function (req, res, next) {
   }
 });
 
-//route pour afficher la liste des utilisateurs firebase assignés à un projet
+// Route pour afficher la liste des utilisateurs Firebase assignés à un projet
 router.get("/:id/utilisateurs", async function (req, res, next) {
   const id = req.params.id;
   try {
@@ -152,22 +146,5 @@ router.get("/:id/utilisateurs", async function (req, res, next) {
     next(err);
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 module.exports = router;
