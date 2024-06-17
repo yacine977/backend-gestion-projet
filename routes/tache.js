@@ -104,13 +104,21 @@ router.post("/assigner", async function (req, res, next) {
   res.json(rows);
 });
 
-
 // Route pour obtenir la liste des tâches assignées à un utilisateur Firebase
->>>>>>> 94632223b646fe9a29797c2623c490dc44bcfdd8
+
 router.get("/par-utilisateur/:uid", async function (req, res, next) {
   const [rows] = await pool.query(
     "SELECT t.id, t.description, t.priorite, t.statut, t.dateDebut, t.dateFinPrevu, t.dateFinReel, t.projetId FROM Tache t JOIN assignationtache a ON t.id = a.tacheId WHERE a.uid = ?",
     [req.params.uid]
+  );
+  res.json(rows);
+});
+
+// Route pour obtenir la liste des tâches assignées à un utilisateur Firebase pour un projet spécifique
+router.get("/par-utilisateur/:uid/projet/:projetId", async function (req, res, next) {
+  const [rows] = await pool.query(
+    "SELECT t.id, t.description, t.priorite, t.statut, t.dateDebut, t.dateFinPrevu, t.dateFinReel, t.projetId FROM Tache t JOIN assignationtache a ON t.id = a.tacheId WHERE a.uid = ? AND t.projetId = ?",
+    [req.params.uid, req.params.projetId]
   );
   res.json(rows);
 });
