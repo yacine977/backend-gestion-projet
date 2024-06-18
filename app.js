@@ -13,6 +13,7 @@ var tacheRouter = require("./routes/tache");
 var documentRouter = require("./routes/document");
 var reunionRouter = require("./routes/reunion");
 var utilisateurRouter = require("./routes/utilisateur");
+var notificationRouter = require("./routes/notification");
 
 // Initialisation de l'application Express
 var app = express();
@@ -36,6 +37,7 @@ app.use("/tache", tacheRouter);
 app.use("/document", documentRouter);
 app.use("/reunion", reunionRouter);
 app.use("/utilisateur", utilisateurRouter);
+app.use("/notification", notificationRouter);
 
 // Gestion des erreurs 404 (ressource non trouvée)
 app.use(function (req, res, next) {
