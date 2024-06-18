@@ -123,4 +123,15 @@ router.get("/par-utilisateur/:uid/projet/:projetId", async function (req, res, n
   res.json(rows);
 });
 
+//route pour mettre le statut d'une tache à "Terminée" par un utilisateur Firebase
+router.put("/terminer/:id", async function (req, res, next) {
+  const [rows] = await pool.query(
+    "UPDATE Tache SET statut = 'Terminée' WHERE id = ?",
+    [req.params.id]
+  );
+  res.json(rows);
+});
+
+
+
 module.exports = router;
