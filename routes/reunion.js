@@ -137,4 +137,26 @@ router.post("/ajouter-utilisateur", async function (req, res) {
 
 
 
+
+//recuperer uid des utilisateurs qui participent à une réunion
+router.get("/participation/:reunionId", async function (req, res, next) {
+  const [rows] = await pool.query("SELECT utilisateurId FROM participationreunion WHERE reunionId = ?", [
+    req.params.reunionId
+  ]);
+  res.json(rows);
+});
+
+//supprimer un utilisateur firebase d'une réunion
+router.delete("/supprimer-utilisateur/:reunionId/:utilisateurId", async function (req, res, next) {
+  const [rows] = await pool.query("DELETE FROM participationreunion WHERE reunionId = ? AND utilisateurId = ?", [
+    req.params.reunionId, req.params.utilisateurId
+  ]);
+  res.json(rows);
+});
+
+
+
+
+
+
 module.exports = router;
