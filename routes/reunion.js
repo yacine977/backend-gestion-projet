@@ -110,4 +110,31 @@ router.get("/par-projet/:projetId", async function (req, res, next) {
   res.json(rows);
 });
 
+//recuperer les reunions creer par un utilisateur pour un projet specifique
+router.get("/par-projet/:projetId/:createurId", async function (req, res, next) {
+  const [rows] = await pool.query("SELECT * FROM reunion WHERE projetId = ? AND createurId = ?", [
+    req.params.projetId, req.params.createurId
+  ]);
+  res.json(rows);
+});
+
+// Ajoute un utulisateur firebase à une réunion
+router.post("/ajouter-utilisateur", async function (req, res) {
+  const { reunionId, utilisateurId } = req.body;
+  try {
+    const [results] = await pool.query(
+      "INSERT INTO  participationreunion  (reunionId, utilisateurId) VALUES (?, ?)",
+      [reunionId, utilisateurId]
+    );
+
+    res.status(201).json({ id: results.insertId, reunionId, utilisateurId });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Erreur lors de l'ajout de l'utilisateur à la réunion");
+  }
+});
+
+
+
+
 module.exports = router;
