@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const serviceAccount = require("../service-account-key.json");
+const { pool } = require("../services/database");
 
 // Initialisation de l'application Firebase avec les identifiants de service
 admin.initializeApp({
@@ -9,17 +10,43 @@ admin.initializeApp({
 const express = require("express");
 const router = express.Router();
 
-// Création d'un utilisateur Firebase
+// Création d'un utilisateur Firebase et insertion dans la base de données
 router.post("/createUser", async (req, res) => {
-  const { email, password } = req.body;
+  const { nom, prenom, email, telephone, motDePasse } = req.body;
+
+  // Vérification des champs requis
+  if (!nom || !prenom || !email || !telephone || !motDePasse) {
+    return res.status(400).json({ message: "Tous les champs sont requis." });
+  }
+
+  // Validation de l'email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Format d'email invalide." });
+  }
+
+  // Validation du téléphone (exemple basique, peut nécessiter une expression plus complexe selon les besoins)
+  const telRegex = /^\d{10}$/;
+  if (!telRegex.test(telephone)) {
+    return res.status(400).json({ message: "Format de téléphone invalide." });
+  }
 
   try {
-    const user = await admin.auth().createUser({ email, password });
-    res.json(user);
+    // Création de l'utilisateur dans Firebase
+    const userRecord = await admin.auth().createUser({ email, password: motDePasse });
+
+    // Insérer l'utilisateur dans MySQL
+    const [result] = await pool.query(
+      "INSERT INTO utilisateur (utilisateurId, nom, prenom, email, telephone, motDePasse) VALUES (?, ?, ?, ?, ?, ?)",
+      [userRecord.uid, nom, prenom, email, telephone, motDePasse]
+    );
+
+    res.json({ firebaseUser: userRecord, mysqlUser: result });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
+
 
 // Suppression d'un utilisateur Firebase
 router.delete("/deleteUser/:uid", async (req, res) => {
