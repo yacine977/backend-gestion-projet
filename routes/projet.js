@@ -104,18 +104,19 @@ router.put("/:id/chef", checkRole("PDG"), async function (req, res, next) {
   }
 });
 
-// Route pour assigner des utilisateurs Firebase à un projet
+// Route pour assigner des utilisateurs à un projet dans la base de données SQL
 router.post("/:id/assigner", async function (req, res, next) {
-  const id = req.params.id;
-  const uid = req.body.uid;
+  const id = req.params.id; // ID du projet
+  const uid = req.body.uid; // ID de l'utilisateur
   try {
+    // Insère une nouvelle relation projet-utilisateur dans la table projet_utilisateur
     const [results] = await pool.query(
       "INSERT INTO projet_utilisateur (id, uid) VALUES (?, ?)",
       [id, uid]
     );
-    res.json(results);
+    res.json(results); // Renvoie le résultat de l'insertion
   } catch (err) {
-    next(err);
+    next(err); // Gère les erreurs potentielles
   }
 });
 
@@ -133,12 +134,12 @@ router.get("/utilisateur/:uid", async function (req, res, next) {
   }
 });
 
-// Route pour afficher la liste des utilisateurs Firebase assignés à un projet
+// Route pour afficher la liste des utilisateurs assignés à un projet avec leur nom et prénom
 router.get("/:id/utilisateurs", async function (req, res, next) {
   const id = req.params.id;
   try {
     const [rows] = await pool.query(
-      "SELECT uid FROM projet_utilisateur WHERE id = ?",
+      "SELECT u.utilisateurId, u.nom, u.prenom FROM utilisateur u JOIN projet_utilisateur pu ON u.utilisateurId = pu.uid WHERE pu.id = ?",
       [id]
     );
     res.json(rows);

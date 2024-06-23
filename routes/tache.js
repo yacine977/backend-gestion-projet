@@ -93,18 +93,23 @@ router.get("/projet/:projetId", async function (req, res, next) {
   res.json(rows);
 });
 
-// Route pour assigner des tâches à un utilisateur Firebase
+// Route pour assigner des tâches à un utilisateur dans la base de données SQL
 router.post("/assigner", async function (req, res, next) {
   const { tacheId, uid } = req.body;
 
-  const [rows] = await pool.query(
-    "INSERT INTO assignationtache (tacheId, uid) VALUES (?, ?)",
-    [tacheId, uid]
-  );
-  res.json(rows);
+  try {
+    const [result] = await pool.query(
+      "INSERT INTO assignationtache (tacheId, uid) VALUES (?, ?)",
+      [tacheId, uid]
+    );
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
 });
 
-// Route pour obtenir la liste des tâches assignées à un utilisateur Firebase
+
+// Route pour obtenir la liste des tâches assignées à un utilisateur dans la base de données SQL
 
 router.get("/par-utilisateur/:uid", async function (req, res, next) {
   const [rows] = await pool.query(
