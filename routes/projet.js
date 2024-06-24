@@ -61,10 +61,18 @@ router.put("/:id", checkRole("PDG"), async function (req, res, next) {
 
 // Route pour supprimer un projet, accessible uniquement par le PDG
 router.delete("/:id", checkRole("PDG"), async function (req, res, next) {
-  const [rows] = await pool.query("DELETE FROM Projet WHERE id = ?", [
-    req.params.id,
-  ]);
-  res.json(rows);
+  try {
+    // Commencez par supprimer les entrées liées dans la table `reunion`
+    await pool.query("DELETE FROM reunion WHERE projetId = ?", [req.params.id]);
+
+    // Ensuite, supprimez le projet
+    const [rows] = await pool.query("DELETE FROM Projet WHERE id = ?", [req.params.id]);
+
+    res.json({ message: "Projet et réunions associées supprimés avec succès" });
+  } catch (error) {
+    console.error("Erreur lors de la suppression du projet et des réunions associées:", error);
+    res.status(500).json({ error: "Erreur lors de la suppression du projet et des réunions associées" });
+  }
 });
 
 // Route pour valider un projet, accessible uniquement par le PDG
