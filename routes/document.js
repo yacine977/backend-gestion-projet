@@ -32,75 +32,46 @@ router.get("/", async function (req, res, next) {
 // Récupère un document par son ID
 router.get("/:id", async function (req, res, next) {
   // Sélectionne un document par son ID
-  const [rows] = await pool.query("SELECT * FROM document WHERE id = ?", [
+  const [rows] = await pool.query("SELECT * FROM document WHERE documentId = ?", [
     req.params.id,
   ]);
-  if (rows.length > 0) {
-    // Si le document existe, le renvoie
-    res.json(rows[0]);
+  if (!rows.length) {
+    // Si aucun document n'est trouvé, renvoie une erreur 404
+    res.status(404).json({ message: "Document not found" });
   } else {
-    // Sinon, renvoie un statut 404
-    res.status(404).end();
+    // Sinon, renvoie le document trouvé
+    res.json(rows[0]);
   }
 });
 
 // Met à jour un document par son ID
 router.put("/:id", async function (req, res, next) {
   const { nom, type, cheminAcces, utilisateurId, projetId } = req.body;
-
-  // Vérifie d'abord si le document existe
-  const [existingData] = await pool.query(
-    "SELECT * FROM document WHERE id = ?",
-    [req.params.id]
-  );
-
-  if (!existingData.length) {
-    // Si le document n'existe pas, renvoie une erreur 404
-    return res.status(404).json({ error: "Document not found" });
-  }
-
-  let updateQuery = "UPDATE document SET ";
-  let queryParams = [];
-
-  // Construit dynamiquement la requête de mise à jour en fonction des champs fournis
-  if (nom !== undefined) {
-    updateQuery += "nom = ?, ";
-    queryParams.push(nom);
-  }
-
-  if (type !== undefined) {
-    updateQuery += "type = ?, ";
-    queryParams.push(type);
-  }
-
-  if (cheminAcces !== undefined) {
-    updateQuery += "cheminAcces = ?, ";
-    queryParams.push(cheminAcces);
-  }
-
-  if (utilisateurId !== undefined) {
-    updateQuery += "utilisateurId = ?, ";
-    queryParams.push(utilisateurId);
-  }
-
-  if (projetId !== undefined) {
-    updateQuery += "projetId = ?, ";
-    queryParams.push(projetId);
-  }
-
-  updateQuery = updateQuery.slice(0, -2); // Supprime la dernière virgule et espace
-  updateQuery += " WHERE id = ?";
-  queryParams.push(req.params.id);
-
   // Exécute la requête de mise à jour
-  await pool.query(updateQuery, queryParams);
-  res.status(200).json({ message: "Document updated successfully" });
+  const [rows] = await pool.query(
+    "UPDATE document SET nom = ?, type = ?, cheminAcces = ?, utilisateurId = ?, projetId = ? WHERE documentId = ?",
+    [nom, type, cheminAcces, utilisateurId, projetId, req.params.id]
+  );
+  if (rows.affectedRows === 0) {
+    // Si aucun document n'est mis à jour, renvoie une erreur 404
+    res.status(404).json({ message: "Document not found" });
+  } else {
+    // Sinon, renvoie le document mis à jour
+    res.status(200).json({
+      id: req.params.id,
+      nom,
+      type,
+      cheminAcces,
+      utilisateurId,
+      projetId,
+    });
+  }
 });
 
 // Supprime un document par son ID
 router.delete("/:id", async function (req, res, next) {
   // Exécute la requête de suppression
-  const [rows] = await pool.query("DELETE FROM document WHERE id = ?", [
+  const [rows] = await pool.query("DELETE FROM document WHERE documentId = ?", [
     req.params.id,
   ]);
   if (rows.affectedRows === 0) {
@@ -129,5 +100,6 @@ router.get("/projet/:projetId", async function (req, res, next) {
   // Sinon, renvoie les documents trouvés
   res.status(200).json(documents);
 });
+
 
 module.exports = router;
