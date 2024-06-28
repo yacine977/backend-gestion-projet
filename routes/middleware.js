@@ -4,7 +4,7 @@ const admin = require("firebase-admin");
  * Middleware pour vérifier le rôle d'un utilisateur.
  * @param {string} role - Le rôle requis pour accéder à la route.
  * @returns {Function} Un middleware express qui vérifie le rôle de l'utilisateur.
- */
+ */ 
 function checkRole(role) {
   return async function (req, res, next) {
     // Extrait le token ID depuis le header Authorization

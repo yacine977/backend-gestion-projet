@@ -128,6 +128,19 @@ router.post("/:id/assigner", async function (req, res, next) {
   }
 });
 
+// Route pour afficher la liste des projets assignés à un utilisateur
+router.get("/utilisateur/:uid", async function (req, res, next) {
+  const uid = req.params.uid;
+  try {
+    const [rows] = await pool.query(
+      "SELECT * FROM projet WHERE id IN (SELECT id FROM projet_utilisateur WHERE uid = ?)",
+      [uid]
+    );
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
 // Route pour récupérer les noms des projets auxquels un utilisateur est assigné
 router.get("/utilisateur/:uid", async function (req, res, next) {
   const uid = req.params.uid;
