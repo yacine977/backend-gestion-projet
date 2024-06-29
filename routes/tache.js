@@ -102,11 +102,18 @@ router.post("/assigner", async function (req, res, next) {
       "INSERT INTO assignationtache (tacheId, uid) VALUES (?, ?)",
       [tacheId, uid]
     );
+
+    // Créer une notification pour l'utilisateur
+    const notificationMessage = `Une nouvelle tâche vous a été assignée : Tâche ID ${tacheId}`;
+    const notificationQuery = 'INSERT INTO notification (message, dateHeure, utilisateurId, isNew) VALUES (?, NOW(), ?, TRUE)';
+    await pool.query(notificationQuery, [notificationMessage, uid]);
+
     res.json(result);
   } catch (err) {
     next(err);
   }
 });
+
 
 
 // Route pour obtenir la liste des tâches assignées à un utilisateur dans la base de données SQL
