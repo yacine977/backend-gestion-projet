@@ -93,17 +93,16 @@ router.get("/projet/:projetId", async function (req, res, next) {
   res.json(rows);
 });
 
-// Route pour assigner des tâches à un utilisateur dans la base de données SQL
 router.post("/assigner", async function (req, res, next) {
-  const { tacheId, uid } = req.body;
+  const { tacheId, uid, assignerId } = req.body;
 
   try {
     const [result] = await pool.query(
-      "INSERT INTO assignationtache (tacheId, uid) VALUES (?, ?)",
-      [tacheId, uid]
+      "INSERT INTO assignationtache (tacheId, uid, assignerId) VALUES (?, ?, ?)",
+      [tacheId, uid, assignerId]
     );
 
-    // Créer une notification pour l'utilisateur
+    // Créer une notification pour l'utilisateur à qui la tâche est assignée
     const notificationMessage = `Une nouvelle tâche vous a été assignée : Tâche ID ${tacheId}`;
     const notificationQuery = 'INSERT INTO notification (message, dateHeure, utilisateurId, isNew) VALUES (?, NOW(), ?, TRUE)';
     await pool.query(notificationQuery, [notificationMessage, uid]);
@@ -113,6 +112,8 @@ router.post("/assigner", async function (req, res, next) {
     next(err);
   }
 });
+
+
 
 
 
@@ -135,14 +136,46 @@ router.get("/par-utilisateur/:uid/projet/:projetId", async function (req, res, n
   res.json(rows);
 });
 
-//route pour mettre le statut d'une tache à "Terminée" par un utilisateur Firebase
 router.put("/terminer/:id", async function (req, res, next) {
-  const [rows] = await pool.query(
-    "UPDATE Tache SET statut = 'Terminée' WHERE id = ?",
-    [req.params.id]
-  );
-  res.json(rows);
+  try {
+    const { uid } = req.body;
+
+    if (!uid) {
+      return res.status(400).json({ error: "L'UID de l'utilisateur est requis" });
+    }
+
+    // Récupérer les informations de la tâche
+    const [tacheRows] = await pool.query("SELECT * FROM Tache WHERE id = ?", [req.params.id]);
+    const tache = tacheRows[0];
+    if (!tache) {
+      return res.status(404).json({ error: "Tâche non trouvée" });
+    }
+
+    // Récupérer l'assignerId depuis la table assignationtache
+    const [assignationRows] = await pool.query("SELECT assignerId FROM assignationtache WHERE tacheId = ?", [req.params.id]);
+    const assignerId = assignationRows[0]?.assignerId;
+    if (!assignerId) {
+      return res.status(404).json({ error: "Assigner non trouvé pour cette tâche" });
+    }
+
+    // Mettre à jour le statut de la tâche à "Terminée"
+    await pool.query("UPDATE Tache SET statut = 'Terminée' WHERE id = ?", [req.params.id]);
+
+    // Créer une notification pour l'utilisateur qui a assigné la tâche
+    const notificationMessage = `La tâche ${tache.description} a été terminée par l'utilisateur ${uid}`;
+    const notificationQuery = 'INSERT INTO notification (message, dateHeure, utilisateurId, isNew) VALUES (?, NOW(), ?, TRUE)';
+    await pool.query(notificationQuery, [notificationMessage, assignerId]);
+
+    res.json({ success: 'Tâche marquée comme terminée et notification créée' });
+  } catch (err) {
+    console.error("Erreur lors de la mise à jour de la tâche", err);
+    next(err);
+  }
 });
+
+
+
+
 
 
 
