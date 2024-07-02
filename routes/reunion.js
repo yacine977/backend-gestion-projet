@@ -163,14 +163,19 @@ router.get("/par-projet/:projetId/:createurId", async function (req, res, next) 
   res.json(rows);
 });
 
-// Ajoute un utulisateur firebase à une réunion
 router.post("/ajouter-utilisateur", async function (req, res) {
   const { reunionId, utilisateurId } = req.body;
   try {
     const [results] = await pool.query(
-      "INSERT INTO  participationreunion  (reunionId, utilisateurId) VALUES (?, ?)",
+      "INSERT INTO participationreunion (reunionId, utilisateurId) VALUES (?, ?)",
       [reunionId, utilisateurId]
     );
+
+    // Création de la notification
+    const notificationMessage = `Vous avez été ajouté à la réunion ${reunionId}`;
+    const notificationQuery =
+      "INSERT INTO notification (message, dateHeure, utilisateurId, isNew) VALUES (?, NOW(), ?, TRUE)";
+    await pool.query(notificationQuery, [notificationMessage, utilisateurId]);
 
     res.status(201).json({ id: results.insertId, reunionId, utilisateurId });
   } catch (error) {
@@ -178,6 +183,7 @@ router.post("/ajouter-utilisateur", async function (req, res) {
     res.status(500).send("Erreur lors de l'ajout de l'utilisateur à la réunion");
   }
 });
+
 
 
 
