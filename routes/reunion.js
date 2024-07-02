@@ -28,14 +28,32 @@ router.post("/", async function (req, res) {
   const { sujet, dateTime, projetId, createurId } = req.body;
 
   try {
+    // Récupérer les dates du projet
+    const [projetRows] = await pool.query("SELECT dateDebut, dateFinPrevu FROM Projet WHERE id = ?", [projetId]);
+    const projet = projetRows[0];
+
+    if (!projet) {
+      return res.status(404).json({ error: "Projet non trouvé" });
+    }
+
+    const projetDebut = new Date(projet.dateDebut);
+    const projetFinPrevu = new Date(projet.dateFinPrevu);
+    const reunionDateTime = new Date(dateTime);
+
+    // Validation de la date de la réunion
+    if (reunionDateTime < projetDebut || reunionDateTime > projetFinPrevu) {
+      return res.status(400).json({
+        error: "La date de la réunion doit être comprise entre les dates du projet"
+      });
+    }
+
+    // Insérer la nouvelle réunion
     const [results] = await pool.query(
       "INSERT INTO reunion (sujet, dateTime, projetId, createurId) VALUES (?, ?, ?, ?)",
       [sujet, dateTime, projetId, createurId]
     );
 
-    res
-      .status(201)
-      .json({ id: results.insertId, sujet, dateTime, projetId, createurId });
+    res.status(201).json({ id: results.insertId, sujet, dateTime, projetId, createurId });
   } catch (error) {
     console.error(error);
     res.status(500).send("Erreur lors de la création de la réunion");
@@ -68,37 +86,64 @@ router.delete("/:id", async function (req, res, next) {
 router.put("/:id", async function (req, res, next) {
   const { sujet, dateTime, projetId, createurId } = req.body;
 
-  // Récupère les données existantes
-  const [existingData] = await pool.query(
-    "SELECT * FROM reunion WHERE id = ?",
-    [req.params.id]
-  );
+  try {
+    // Récupère les données existantes de la réunion
+    const [existingData] = await pool.query(
+      "SELECT * FROM reunion WHERE id = ?",
+      [req.params.id]
+    );
 
-  // Si la réunion n'existe pas, retourne une erreur 404
-  if (!existingData.length) {
-    return res.status(404).json({ error: "Réunion non trouvée" });
+    // Si la réunion n'existe pas, retourne une erreur 404
+    if (!existingData.length) {
+      return res.status(404).json({ error: "Réunion non trouvée" });
+    }
+
+    const existingReunion = existingData[0];
+
+    // Utilise les nouvelles valeurs ou garde les anciennes si non fournies
+    const newSujet = sujet || existingReunion.sujet;
+    const newDateTime = dateTime || existingReunion.dateTime;
+    const newProjetId = projetId || existingReunion.projetId;
+    const newCreateurId = createurId || existingReunion.createurId;
+
+    // Récupérer les dates du projet correspondant
+    const [projetRows] = await pool.query("SELECT dateDebut, dateFinPrevu FROM Projet WHERE id = ?", [newProjetId]);
+    const projet = projetRows[0];
+
+    if (!projet) {
+      return res.status(404).json({ error: "Projet non trouvé" });
+    }
+
+    const projetDebut = new Date(projet.dateDebut);
+    const projetFinPrevu = new Date(projet.dateFinPrevu);
+    const reunionDateTime = new Date(newDateTime);
+
+    // Validation de la date de la réunion
+    if (reunionDateTime < projetDebut || reunionDateTime > projetFinPrevu) {
+      return res.status(400).json({
+        error: "La date de la réunion doit être comprise entre les dates du projet"
+      });
+    }
+
+    // Met à jour la base de données
+    await pool.query(
+      "UPDATE reunion SET sujet = ?, dateTime = ?, projetId = ?, createurId = ? WHERE id = ?",
+      [newSujet, newDateTime, newProjetId, newCreateurId, req.params.id]
+    );
+
+    res.json({
+      id: req.params.id,
+      sujet: newSujet,
+      dateTime: newDateTime,
+      projetId: newProjetId,
+      createurId: newCreateurId,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Erreur lors de la mise à jour de la réunion");
   }
-
-  // Met à jour les champs passés
-  const newSujet = sujet || existingData[0].sujet;
-  const newDateTime = dateTime || existingData[0].dateTime;
-  const newProjetId = projetId || existingData[0].projetId;
-  const newCreateurId = createurId || existingData[0].createurId;
-
-  // Met à jour la base de données
-  await pool.query(
-    "UPDATE reunion SET sujet = ?, dateTime = ?, projetId = ?, createurId = ? WHERE id = ?",
-    [newSujet, newDateTime, newProjetId, newCreateurId, req.params.id]
-  );
-
-  res.json({
-    id: req.params.id,
-    sujet: newSujet,
-    dateTime: newDateTime,
-    projetId: newProjetId,
-    createurId: newCreateurId,
-  });
 });
+
 
 /**
  * Récupère les réunions associées à un ID de projet spécifique.
