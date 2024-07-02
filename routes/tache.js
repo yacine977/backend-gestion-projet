@@ -101,10 +101,6 @@ router.post("/", async function (req, res, next) {
   }
 });
 
-module.exports = router;
-
-module.exports = router;
-
 // Route pour modifier une tâche existante
 router.put("/:id", async function (req, res, next) {
   try {
@@ -113,12 +109,62 @@ router.put("/:id", async function (req, res, next) {
     ]);
     const oldData = rows[0];
 
+    if (!oldData) {
+      return res.status(404).json({ error: "Tâche non trouvée" });
+    }
+
     // Fusionner les données existantes avec les nouvelles valeurs fournies
     const newData = { ...oldData, ...req.body };
 
     // Si dateFinReel n'est pas fournie dans les nouvelles valeurs, la définir sur null
     if (!newData.dateFinReel) {
       newData.dateFinReel = null;
+    }
+
+    // Récupérer les dates du projet
+    const [projetRows] = await pool.query(
+      "SELECT dateDebut, dateFinPrevu FROM Projet WHERE id = ?",
+      [newData.projetId]
+    );
+    const projet = projetRows[0];
+
+    if (!projet) {
+      return res.status(404).json({ error: "Projet non trouvé" });
+    }
+
+    const projetDebut = new Date(projet.dateDebut);
+    const projetFinPrevu = new Date(projet.dateFinPrevu);
+
+    const debut = new Date(newData.dateDebut);
+    const finPrevu = new Date(newData.dateFinPrevu);
+    const finReel = newData.dateFinReel ? new Date(newData.dateFinReel) : null;
+
+    // Validation des dates
+    if (debut < projetDebut || debut > projetFinPrevu) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "La date de début de la tâche doit être comprise entre les dates du projet",
+        });
+    }
+
+    if (finPrevu < projetDebut || finPrevu > projetFinPrevu) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "La date de fin prévue de la tâche doit être comprise entre les dates du projet",
+        });
+    }
+
+    if (finReel && (finReel < projetDebut || finReel > projetFinPrevu)) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "La date de fin réelle de la tâche doit être comprise entre les dates du projet",
+        });
     }
 
     const [updateRows] = await pool.query(
@@ -139,6 +185,7 @@ router.put("/:id", async function (req, res, next) {
     next(err);
   }
 });
+
 
 // Route pour supprimer une tâche
 router.delete("/:id", async function (req, res, next) {

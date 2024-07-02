@@ -37,9 +37,11 @@ router.put("/:id", checkRole("PDG"), async function (req, res, next) {
     ]);
     const oldData = rows[0];
 
+    // Créer newData en vérifiant explicitement si dateFinReel est fournie
     const newData = {
       ...oldData,
       ...req.body,
+      dateFinReel: req.body.hasOwnProperty('dateFinReel') ? req.body.dateFinReel : oldData.dateFinReel,
     };
 
     const [updateRows] = await pool.query(
