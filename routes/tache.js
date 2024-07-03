@@ -246,6 +246,8 @@ router.get(
   }
 );
 
+
+
 router.put("/terminer/:id", async function (req, res, next) {
   try {
     const { uid } = req.body;

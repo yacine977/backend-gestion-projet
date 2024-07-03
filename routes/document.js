@@ -99,7 +99,7 @@ router.get("/projet/:projetId", async function (req, res, next) {
   const { projetId } = req.params;
   // Sélectionne les documents d'un projet spécifique et les informations du créateur
   const query = `
-    SELECT document.*, utilisateur.nom, utilisateur.prenom 
+    SELECT document.*, utilisateur.nom AS utilisateurNom, utilisateur.prenom AS utilisateurPrenom 
     FROM document 
     INNER JOIN utilisateur ON document.utilisateurId = utilisateur.utilisateurId 
     WHERE document.projetId = ?
@@ -114,6 +114,7 @@ router.get("/projet/:projetId", async function (req, res, next) {
   // Sinon, renvoie les documents trouvés avec le nom et le prénom du créateur
   res.status(200).json(documents);
 });
+
 
 
 
