@@ -148,10 +148,17 @@ router.put("/:id", async function (req, res, next) {
 /**
  * Récupère les réunions associées à un ID de projet spécifique.
  */
+/**
+ * Récupère les réunions associées à un ID de projet spécifique, incluant le nom et le prénom de l'utilisateur.
+ */
 router.get("/par-projet/:projetId", async function (req, res, next) {
-  const [rows] = await pool.query("SELECT * FROM reunion WHERE projetId = ?", [
-    req.params.projetId,
-  ]);
+  const query = `
+    SELECT reunion.*, utilisateur.nom, utilisateur.prenom 
+    FROM reunion 
+    INNER JOIN utilisateur ON reunion.createurId = utilisateur.utilisateurId 
+    WHERE reunion.projetId = ?
+  `;
+  const [rows] = await pool.query(query, [req.params.projetId]);
   res.json(rows);
 });
 
@@ -162,7 +169,7 @@ router.get("/par-projet/:projetId/:createurId", async function (req, res, next) 
   ]);
   res.json(rows);
 });
-
+//ajouter un utilisateur à une réunion
 router.post("/ajouter-utilisateur", async function (req, res) {
   const { reunionId, utilisateurId } = req.body;
   try {
@@ -183,6 +190,8 @@ router.post("/ajouter-utilisateur", async function (req, res) {
     res.status(500).send("Erreur lors de l'ajout de l'utilisateur à la réunion");
   }
 });
+
+
 
 
 

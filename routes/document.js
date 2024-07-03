@@ -23,10 +23,22 @@ router.post("/", async function (req, res, next) {
 
 // Récupère tous les documents
 router.get("/", async function (req, res, next) {
-  // Sélectionne tous les documents de la base de données
-  const [rows] = await pool.query("SELECT * FROM document");
-  // Renvoie les documents trouvés
-  res.json(rows);
+  // Sélectionne tous les documents de la base de données, incluant le nom du projet et le nom, prénom du créateur
+  const query = `
+    SELECT document.*, utilisateur.nom AS createurNom, utilisateur.prenom AS createurPrenom, projet.nom AS nomProjet
+    FROM document
+    INNER JOIN utilisateur ON document.utilisateurId = utilisateur.utilisateurId
+    INNER JOIN projet ON document.projetId = projet.id
+  `;
+  const [documents] = await pool.query(query);
+
+  if (!documents.length) {
+    // Si aucun document n'est trouvé, renvoie un tableau vide
+    return res.status(200).json([]);
+  }
+
+  // Renvoie les documents trouvés avec le nom du projet et le nom, prénom du créateur
+  res.status(200).json(documents);
 });
 
 // Récupère un document par son ID
@@ -82,26 +94,28 @@ router.delete("/:id", async function (req, res, next) {
     res.status(200).json({ message: "Document deleted successfully" });
   }
 });
-
 // Récupère les documents d'un projet spécifique
 router.get("/projet/:projetId", async function (req, res, next) {
   const { projetId } = req.params;
-  // Sélectionne les documents d'un projet spécifique
-  const [documents] = await pool.query(
-    "SELECT * FROM document WHERE projetId = ?",
-    [projetId]
-  );
+  // Sélectionne les documents d'un projet spécifique et les informations du créateur
+  const query = `
+    SELECT document.*, utilisateur.nom, utilisateur.prenom 
+    FROM document 
+    INNER JOIN utilisateur ON document.utilisateurId = utilisateur.utilisateurId 
+    WHERE document.projetId = ?
+  `;
+  const [documents] = await pool.query(query, [projetId]);
 
   if (!documents.length) {
     // Si aucun document n'est trouvé, renvoie un tableau vide
     return res.status(200).json([]);
   }
 
-  // Sinon, renvoie les documents trouvés
+  // Sinon, renvoie les documents trouvés avec le nom et le prénom du créateur
   res.status(200).json(documents);
 });
 
 
 
-
 module.exports = router;
+
