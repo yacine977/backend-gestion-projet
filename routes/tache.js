@@ -292,7 +292,7 @@ if (userRows.length === 0) {
 const { nom, prenom } = userRows[0];
 
 // Créer une notification pour l'utilisateur qui a assigné la tâche
-const notificationMessage = `La tâche ${tache.description} a été terminée par l'utilisateur ${prenom} ${nom}`;
+const notificationMessage = `La tâche ${tache.description} a été terminée par l'utilisateur ${nom} ${prenom} `;
 const notificationQuery =
   "INSERT INTO notification (message, dateHeure, utilisateurId, isNew) VALUES (?, NOW(), ?, TRUE)";
 await pool.query(notificationQuery, [notificationMessage, assignerId]);
