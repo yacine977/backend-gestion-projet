@@ -280,17 +280,24 @@ router.put("/terminer/:id", async function (req, res, next) {
     }
 
     // Mettre à jour le statut de la tâche à "Terminée"
-    await pool.query("UPDATE Tache SET statut = 'Terminée' WHERE id = ?", [
-      req.params.id,
-    ]);
+await pool.query("UPDATE Tache SET statut = 'Terminée' WHERE id = ?", [
+  req.params.id,
+]);
 
-    // Créer une notification pour l'utilisateur qui a assigné la tâche
-    const notificationMessage = `La tâche ${tache.description} a été terminée par l'utilisateur ${uid}`;
-    const notificationQuery =
-      "INSERT INTO notification (message, dateHeure, utilisateurId, isNew) VALUES (?, NOW(), ?, TRUE)";
-    await pool.query(notificationQuery, [notificationMessage, assignerId]);
+// Récupérer les informations de l'utilisateur
+const [userRows] = await pool.query("SELECT nom, prenom FROM utilisateur WHERE utilisateurId = ?", [uid]);
+if (userRows.length === 0) {
+  throw new Error('Utilisateur non trouvé');
+}
+const { nom, prenom } = userRows[0];
 
-    res.json({ success: "Tâche marquée comme terminée et notification créée" });
+// Créer une notification pour l'utilisateur qui a assigné la tâche
+const notificationMessage = `La tâche ${tache.description} a été terminée par l'utilisateur ${prenom} ${nom}`;
+const notificationQuery =
+  "INSERT INTO notification (message, dateHeure, utilisateurId, isNew) VALUES (?, NOW(), ?, TRUE)";
+await pool.query(notificationQuery, [notificationMessage, assignerId]);
+
+res.json({ success: "Tâche marquée comme terminée et notification créée" });
   } catch (err) {
     console.error("Erreur lors de la mise à jour de la tâche", err);
     next(err);
