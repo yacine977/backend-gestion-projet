@@ -169,17 +169,30 @@ router.get("/par-projet/:projetId/:createurId", async function (req, res, next) 
   ]);
   res.json(rows);
 });
-//ajouter un utilisateur à une réunion
+// Ajouter un utilisateur à une réunion
 router.post("/ajouter-utilisateur", async function (req, res) {
   const { reunionId, utilisateurId } = req.body;
   try {
+    // Récupérer le sujet de la réunion à partir de l'ID de la réunion
+    const [reunionRows] = await pool.query(
+      "SELECT sujet FROM reunion WHERE id = ?",
+      [reunionId]
+    );
+
+    if (reunionRows.length === 0) {
+      return res.status(404).json({ error: "Réunion non trouvée" });
+    }
+
+    const sujetReunion = reunionRows[0].sujet;
+
+    // Insérer l'utilisateur dans la réunion
     const [results] = await pool.query(
       "INSERT INTO participationreunion (reunionId, utilisateurId) VALUES (?, ?)",
       [reunionId, utilisateurId]
     );
 
-    // Création de la notification
-    const notificationMessage = `Vous avez été ajouté à la réunion ${reunionId}`;
+    // Création de la notification avec le sujet de la réunion
+    const notificationMessage = `Vous avez été ajouté à la réunion : ${sujetReunion}`;
     const notificationQuery =
       "INSERT INTO notification (message, dateHeure, utilisateurId, isNew) VALUES (?, NOW(), ?, TRUE)";
     await pool.query(notificationQuery, [notificationMessage, utilisateurId]);
@@ -190,6 +203,7 @@ router.post("/ajouter-utilisateur", async function (req, res) {
     res.status(500).send("Erreur lors de l'ajout de l'utilisateur à la réunion");
   }
 });
+
 
 
 
