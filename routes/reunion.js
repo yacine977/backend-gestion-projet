@@ -191,10 +191,10 @@ router.post("/ajouter-utilisateur", async function (req, res) {
       [reunionId, utilisateurId]
     );
 
-    // Création de la notification avec le sujet de la réunion
+    // Création de la notification avec le sujet de la réunion, en ajoutant 10 heures
     const notificationMessage = `Vous avez été ajouté à la réunion : ${sujetReunion}`;
     const notificationQuery =
-      "INSERT INTO notification (message, dateHeure, utilisateurId, isNew) VALUES (?, NOW(), ?, TRUE)";
+      "INSERT INTO notification (message, dateHeure, utilisateurId, isNew) VALUES (?, DATE_ADD(NOW(), INTERVAL 10 HOUR), ?, TRUE)";
     await pool.query(notificationQuery, [notificationMessage, utilisateurId]);
 
     res.status(201).json({ id: results.insertId, reunionId, utilisateurId });
@@ -203,6 +203,7 @@ router.post("/ajouter-utilisateur", async function (req, res) {
     res.status(500).send("Erreur lors de l'ajout de l'utilisateur à la réunion");
   }
 });
+
 
 
 
