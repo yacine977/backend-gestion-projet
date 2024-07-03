@@ -207,13 +207,26 @@ router.post("/assigner", async function (req, res, next) {
   const { tacheId, uid, assignerId } = req.body;
 
   try {
+    // Récupérer la description de la tâche à partir de l'ID de la tâche
+    const [tacheRows] = await pool.query(
+      "SELECT description FROM tache WHERE id = ?",
+      [tacheId]
+    );
+
+    if (tacheRows.length === 0) {
+      return res.status(404).json({ error: "Tâche non trouvée" });
+    }
+
+    const description = tacheRows[0].description;
+
+    // Insérer l'assignation de la tâche
     const [result] = await pool.query(
       "INSERT INTO assignationtache (tacheId, uid, assignerId) VALUES (?, ?, ?)",
       [tacheId, uid, assignerId]
     );
 
     // Créer une notification pour l'utilisateur à qui la tâche est assignée
-    const notificationMessage = `Une nouvelle tâche vous a été assignée : Tâche ID ${tacheId}`;
+    const notificationMessage = `Une nouvelle tâche vous a été assignée : ${description}`;
     const notificationQuery =
       "INSERT INTO notification (message, dateHeure, utilisateurId, isNew) VALUES (?, NOW(), ?, TRUE)";
     await pool.query(notificationQuery, [notificationMessage, uid]);
@@ -223,6 +236,7 @@ router.post("/assigner", async function (req, res, next) {
     next(err);
   }
 });
+
 
 // Route pour obtenir la liste des tâches assignées à un utilisateur dans la base de données SQL
 
